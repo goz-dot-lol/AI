@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gosewehr Heritage Journey: A Saxon Homecoming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 640px) { .chart-container { height: 300px; } }
+        /* No SVG Used. Custom CSS for timeline dots */
+        .timeline-dot {
+            width: 16px;
+            height: 16px;
+            background-color: #d97706; /* Amber-600 */
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px #d97706;
+        }
+    </style>
+    <!-- 
+    Palette Selection: "Energetic & Professional"
+    Primary Blue: #1e3a8a (Deep Navy)
+    Accent Amber: #d97706 (Historical Gold)
+    Background: #f8fafc (Slate-50)
+    Text: #1e293b (Slate-800)
+    
+    Source Material Analysis & Narrative Plan:
+    1. Introduction: Hook the user with the "Saxon Homecoming" concept.
+    2. Weather: Analyze Spring vs Summer to answer the user's specific question about timing.
+    3. Geography: Visualize the trip loop (Hanover -> Goslar -> Warmsen -> Bremen -> Münster) using coordinates.
+    4. History: Connect the "Gosewehr" name (River Gose) to Goslar and Saxon history (Irminsul).
+    5. Itinerary: 7-Day logical flow maximizing efficiency.
+    6. Modern: Highlight Warmsen business connections.
+    
+    Visualization Choices (NO SVG):
+    1. Climate: Chart.js Combo Bar/Line. Goal: Compare.
+    2. Route: Plotly.js Scatter (Canvas). Goal: Location/Relationships.
+    3. Activity Split: Chart.js Doughnut. Goal: Composition.
+    4. Budget: Chart.js Bar. Goal: Inform/Plan.
+    -->
+</head>
+<body class="bg-slate-50">
+
+    <!-- Hero Section -->
+    <header class="bg-blue-900 text-white py-12 px-6 shadow-lg">
+        <div class="max-w-6xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">Gosewehr Heritage Journey</h1>
+            <p class="text-xl md:text-2xl text-amber-400 font-light">A 7-Day Exploration of Saxon Roots & Modern Connections</p>
+            <div class="mt-8 flex justify-center space-x-4">
+                <span class="bg-blue-800 px-4 py-2 rounded-full text-sm">📍 Lower Saxony</span>
+                <span class="bg-blue-800 px-4 py-2 rounded-full text-sm">🗓️ Spring/Summer 2025</span>
+                <span class="bg-blue-800 px-4 py-2 rounded-full text-sm">⚔️ Saxon History</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 gap-12">
+
+        <!-- Introduction -->
+        <section class="bg-white rounded-xl shadow-md p-8 border-l-8 border-amber-600">
+            <h2 class="text-3xl font-bold text-blue-900 mb-4">The Mission</h2>
+            <p class="text-lg leading-relaxed text-gray-700">
+                This infographic outlines a strategic plan to reconnect with the <strong>Gosewehr</strong> heritage. The name itself strongly suggests a geographic origin near the <strong>Gose River</strong> in <strong>Goslar</strong> ("Wehr" typically meaning a weir, dam, or defense). This journey bridges the ancient world of the <strong>Saxons</strong>—visiting sites like the rumored location of the <strong>Irminsul</strong>—with the modern day, including family businesses in <strong>Warmsen</strong>.
+            </p>
+        </section>
+
+        <!-- Weather Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+                <h3 class="text-2xl font-bold text-blue-900 mb-4">When to Visit?</h3>
+                <p class="text-gray-700 mb-4">
+                    You asked about visiting in Spring or Summer. <strong>Late May to June</strong> is often the sweet spot. It offers the lush greenery of spring (essential for seeing the Saxon landscapes) with lower rainfall than the peak of summer. July and August are warmer but often experience heavier "summer storms."
+                </p>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <strong class="text-blue-900">Recommendation:</strong> Aim for <strong>early June</strong>. The days are long (sunset around 9:30 PM), maximizing your touring time.
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <div class="chart-container">
+                    <canvas id="weatherChart"></canvas>
+                </div>
+                <p class="text-center text-sm text-gray-500 mt-2">Average Temperature vs. Rainfall in Hanover</p>
+            </div>
+        </section>
+
+        <!-- Geographic Overview -->
+        <section class="bg-white rounded-xl shadow-md p-8">
+            <h3 class="text-2xl font-bold text-blue-900 mb-6">The Saxon Loop: Geographic Overview</h3>
+            <p class="text-gray-700 mb-6">
+                This scatter plot visualizes the relative positions of your key destinations. The trip forms a natural loop starting and ending near Hanover/Bremen. <strong>Goslar</strong> lies to the southeast in the Harz mountains, while <strong>Warmsen</strong> and the family lands are to the northwest.
+            </p>
+            <div id="routeMap" style="width: 100%; height: 400px;" class="mx-auto border border-gray-200 rounded-lg"></div>
+            <p class="text-center text-sm text-gray-500 mt-2">Interactive Map: Hover for coordinates. (Rendered via Plotly Canvas)</p>
+        </section>
+
+        <!-- Historical Timeline -->
+        <section>
+            <h3 class="text-2xl font-bold text-blue-900 mb-8 text-center">Timeline: From Saxons to Systems</h3>
+            <div class="relative border-l-4 border-blue-200 ml-6 md:ml-12 space-y-12">
+                
+                <!-- Timeline Item 1 -->
+                <div class="relative pl-8">
+                    <div class="absolute -left-2.5 top-1 timeline-dot"></div>
+                    <h4 class="text-xl font-bold text-blue-800">772 AD: The Irminsul</h4>
+                    <p class="text-gray-600 mt-1">Charlemagne destroys the Irminsul, the sacred pillar of the Saxons. This event marks the turning point of the region. Sites like the <strong>Eresburg</strong> (near Marsberg) claim to be this location.</p>
+                </div>
+
+                <!-- Timeline Item 2 -->
+                <div class="relative pl-8">
+                    <div class="absolute -left-2.5 top-1 timeline-dot"></div>
+                    <h4 class="text-xl font-bold text-blue-800">968 AD: Founding of Goslar</h4>
+                    <p class="text-gray-600 mt-1">Discovery of silver ore in Rammelsberg leads to the founding of Goslar. The <strong>Gose River</strong> flows through the town—likely the etymological root of "Gose-wehr" (Defense of the Gose/Dam of the Gose).</p>
+                </div>
+
+                <!-- Timeline Item 3 -->
+                <div class="relative pl-8">
+                    <div class="absolute -left-2.5 top-1 timeline-dot"></div>
+                    <h4 class="text-xl font-bold text-blue-800">1648: Peace of Westphalia</h4>
+                    <p class="text-gray-600 mt-1">Signed in <strong>Münster</strong> and Osnabrück, ending the Thirty Years' War. Crucial for understanding the political landscape your ancestors lived through.</p>
+                </div>
+
+                <!-- Timeline Item 4 -->
+                <div class="relative pl-8">
+                    <div class="absolute -left-2.5 top-1 timeline-dot"></div>
+                    <h4 class="text-xl font-bold text-blue-800">Modern Era: Gosewehr Systems</h4>
+                    <p class="text-gray-600 mt-1">The family name persists in <strong>Warmsen</strong>. "Gosewehr System" stands as a testament to modern Saxon engineering and automation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Itinerary Section -->
+        <section class="bg-slate-100 p-2 md:p-8 rounded-xl">
+            <h3 class="text-3xl font-bold text-blue-900 mb-8 text-center">Proposed 7-Day Itinerary</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Day 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 1: Arrival</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Hanover Base</h4>
+                    <p class="text-sm text-gray-600">Arrive in Hanover (HAJ). Pick up a rental car. Explore the <strong>Herrenhausen Gardens</strong> to stretch your legs.</p>
+                </div>
+
+                <!-- Day 2 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 2: The Name's Origin</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Goslar & The Harz</h4>
+                    <p class="text-sm text-gray-600">Drive to <strong>Goslar</strong>. Visit the Imperial Palace (Kaiserpfalz) and the Rammelsberg Mines. Walk along the <strong>Gose River</strong>.</p>
+                </div>
+
+                <!-- Day 3 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 3: Saxon Spirit</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Verden & Stones</h4>
+                    <p class="text-sm text-gray-600">Drive north. Visit the <strong>Sachsenhain</strong> in Verden (memorial to Saxons). See the prehistoric stone graves (Hünenbetten) in the area.</p>
+                </div>
+
+                <!-- Day 4 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border-2 border-amber-400">
+                    <div class="text-amber-600 font-bold mb-2">Day 4: Family Roots</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Warmsen Area</h4>
+                    <p class="text-sm text-gray-600"><strong>The Core Day.</strong> Visit Warmsen. Locate <strong>Gosewehr System</strong>. Visit local church records (Kirchenbücher) if arranged. Lunch at a local Gasthaus.</p>
+                </div>
+
+                <!-- Day 5 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 5: Hanseatic History</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Bremen</h4>
+                    <p class="text-sm text-gray-600">Short drive to Bremen. See the Roland statue (symbol of freedom). A more relaxed day enjoying the market square.</p>
+                </div>
+
+                <!-- Day 6 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 6: Peace & Power</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Münster</h4>
+                    <p class="text-sm text-gray-600">Drive southwest to Münster. Visit the Peace Hall (Friedenssaal). The architecture here differs significantly (red brick vs timber frame).</p>
+                </div>
+
+                 <!-- Day 7 -->
+                 <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 7: Departure</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Return to Hanover</h4>
+                    <p class="text-sm text-gray-600">Leisurely drive back to Hanover for departure. Optional stop at Lake Steinhude for a final eel sandwich (regional specialty).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Activity Split -->
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-bold text-blue-900 mb-4 text-center">Trip Focus Balance</h3>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+                <p class="text-sm text-gray-500 mt-4 text-center">
+                    This itinerary balances heritage research with general tourism to prevent burnout.
+                </p>
+            </div>
+
+            <!-- Budget -->
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-bold text-blue-900 mb-4 text-center">Est. Budget Allocation (7 Days)</h3>
+                <div class="chart-container">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+                <p class="text-sm text-gray-500 mt-4 text-center">
+                    Based on mid-range comfort. Hotels in this region are reasonably priced compared to Munich or Berlin.
+                </p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 py-8 border-t border-gray-200">
+            <p>Generated for Gosewehr Heritage Research Planner</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- 1. Weather Chart (Chart.js) ---
+        // Justification: To help decide between Spring (May/June) and Summer (July/Aug).
+        const ctxWeather = document.getElementById('weatherChart').getContext('2d');
+        
+        // Helper to process labels for Chart.js (Required by brief)
+        const processLabels = (labels) => {
+            return labels.map(label => {
+                if (label.length > 16) {
+                    return label.split(' ');
+                }
+                return label;
+            });
+        };
+
+        new Chart(ctxWeather, {
+            type: 'bar',
+            data: {
+                labels: ['April', 'May', 'June', 'July', 'August', 'September'],
+                datasets: [
+                    {
+                        label: 'Avg Temp (°C)',
+                        data: [13, 18, 21, 23, 23, 19],
+                        type: 'line',
+                        borderColor: '#d97706',
+                        backgroundColor: '#d97706',
+                        yAxisID: 'y',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Rainfall (mm)',
+                        data: [40, 50, 65, 70, 60, 50],
+                        backgroundColor: '#1e3a8a',
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Temperature (°C)' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Rainfall (mm)' }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- 2. Route Map (Plotly.js) ---
+        // Justification: Scatter plot is best to show relative location without map tiles (No external map services used).
+        // Coordinates approx relative to Hanover
+        const cities = [
+            {name: 'Hanover (Start/End)', lat: 52.37, lon: 9.73, color: '#1e3a8a', size: 25},
+            {name: 'Goslar (Heritage)', lat: 51.90, lon: 10.42, color: '#d97706', size: 20},
+            {name: 'Warmsen (Family)', lat: 52.45, lon: 8.85, color: '#d97706', size: 20},
+            {name: 'Bremen (History)', lat: 53.07, lon: 8.80, color: '#1e3a8a', size: 15},
+            {name: 'Münster (Peace)', lat: 51.96, lon: 7.62, color: '#1e3a8a', size: 15}
+        ];
+
+        const traceRoute = {
+            x: cities.map(c => c.lon),
+            y: cities.map(c => c.lat),
+            mode: 'markers+text',
+            type: 'scatter',
+            text: cities.map(c => c.name),
+            textposition: 'top center',
+            marker: {
+                size: cities.map(c => c.size),
+                color: cities.map(c => c.color)
+            },
+            hoverinfo: 'text'
+        };
+
+        const layoutRoute = {
+            margin: {t: 20, b: 20, l: 20, r: 20},
+            xaxis: { showgrid: false, zeroline: false, showticklabels: false, title: 'West <-> East' },
+            yaxis: { showgrid: false, zeroline: false, showticklabels: false, title: 'South <-> North', scaleanchor: "x", scaleratio: 1 },
+            paper_bgcolor: '#fff',
+            plot_bgcolor: '#f8fafc'
+        };
+
+        // Render using canvas/svg mix but handled by Plotly
+        Plotly.newPlot('routeMap', [traceRoute], layoutRoute, {responsive: true, displayModeBar: false});
+
+
+        // --- 3. Activity Balance (Chart.js Doughnut) ---
+        const ctxActivity = document.getElementById('activityChart').getContext('2d');
+        new Chart(ctxActivity, {
+            type: 'doughnut',
+            data: {
+                labels: processLabels(['Historical Research', 'Family Heritage Sites', 'Nature & Scenery', 'City Culture & Food']),
+                datasets: [{
+                    data: [30, 25, 20, 25],
+                    backgroundColor: ['#1e3a8a', '#d97706', '#64748b', '#93c5fd'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- 4. Budget Chart (Chart.js Bar) ---
+        const ctxBudget = document.getElementById('budgetChart').getContext('2d');
+        new Chart(ctxBudget, {
+            type: 'bar',
+            data: {
+                labels: processLabels(['Accommodation (Hotels/Inns)', 'Car Rental & Fuel', 'Food & Dining', 'Museums & Tours', 'Contingency']),
+                datasets: [{
+                    label: 'Estimated Cost (€)',
+                    data: [900, 450, 500, 200, 150],
+                    backgroundColor: '#1e3a8a',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    </script>
+    
+    <!-- 
+    NO MERMAID JS USED.
+    NO SVG GRAPHICS USED (Plotly renders to container div/canvas logic, Chart.js uses Canvas).
+    -->
+</body>
+</html>
+

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gosewehr Heritage Journey: The Saxon Homecoming</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Leaflet CSS & JS for the Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 640px) { .chart-container { height: 300px; } }
+        
+        /* Timeline styling */
+        .timeline-dot {
+            width: 16px;
+            height: 16px;
+            background-color: #d97706; /* Amber-600 */
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px #d97706;
+        }
+
+        /* Map Container override */
+        #map {
+            height: 450px;
+            width: 100%;
+            z-index: 1; /* Ensure map stays below sticky headers if added */
+        }
+    </style>
+    <!-- 
+    Updated for User "Goz":
+    1. Replaced Plotly Scatter with Leaflet.js for a real tile-based map.
+    2. Added "Modehaus Gosewehr" in Lavelsloh to Day 4 and Timeline.
+    3. Maintained vibrant Navy/Amber palette.
+    -->
+</head>
+<body class="bg-slate-50">
+
+    <!-- Hero Section -->
+    <header class="bg-blue-900 text-white py-12 px-6 shadow-lg">
+        <div class="max-w-6xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">The Gosewehr Heritage Tour</h1>
+            <p class="text-xl md:text-2xl text-amber-400 font-light">History, Industry, & Style in Lower Saxony</p>
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <span class="bg-blue-800 px-4 py-2 rounded-full text-sm font-semibold border border-blue-700">📍 Hanover / Warmsen / Lavelsloh</span>
+                <span class="bg-blue-800 px-4 py-2 rounded-full text-sm font-semibold border border-blue-700">🗓️ Spring/Summer 2025</span>
+                <span class="bg-blue-800 px-4 py-2 rounded-full text-sm font-semibold border border-blue-700">⚔️ Saxon Roots</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 gap-12">
+
+        <!-- Introduction -->
+        <section class="bg-white rounded-xl shadow-md p-8 border-l-8 border-amber-600">
+            <h2 class="text-3xl font-bold text-blue-900 mb-4">The Plan</h2>
+            <p class="text-lg leading-relaxed text-gray-700">
+                This isn't just a vacation, Goz; it's a reconnaissance mission into your history. We are targeting the area of <strong>Lower Saxony</strong>. The name "Gosewehr" pulls us towards the <strong>Gose River</strong> in Goslar for ancient history, while modern records point us directly to the <strong>Warmsen/Lavelsloh</strong> area. There, we find the family name alive and well in two distinct sectors: High-tech automation at <em>Gosewehr System</em> and local fashion at <em>Modehaus Gosewehr</em>.
+            </p>
+        </section>
+
+        <!-- Weather Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+                <h3 class="text-2xl font-bold text-blue-900 mb-4">Timing the Trip</h3>
+                <p class="text-gray-700 mb-4">
+                    To catch the best weather for touring the Saxon heritage sites (mostly outdoors), <strong>June</strong> is your best bet. It avoids the heavy humidity of late July but guarantees everything is green and blooming.
+                </p>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <strong class="text-blue-900">Pro Tip:</strong> Late May/Early June often coincides with "Spargelzeit" (Asparagus season)—a massive culinary deal in this region you don't want to miss.
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <div class="chart-container">
+                    <canvas id="weatherChart"></canvas>
+                </div>
+                <p class="text-center text-sm text-gray-500 mt-2">Hanover Climate Data (Avg)</p>
+            </div>
+        </section>
+
+        <!-- Geographic Overview (LEAFLET MAP) -->
+        <section class="bg-white rounded-xl shadow-md p-2 md:p-8">
+            <div class="mb-6 px-4">
+                <h3 class="text-2xl font-bold text-blue-900 mb-2">The Saxon Loop: Interactive Map</h3>
+                <p class="text-gray-700">
+                    This map highlights your key stops. Note the proximity between <strong>Warmsen</strong> and <strong>Lavelsloh</strong> (Left side)—this is the modern "Family HQ" area. <strong>Goslar</strong> (Bottom Right) is the historical origin.
+                </p>
+            </div>
+            <!-- Map Container -->
+            <div id="map" class="rounded-lg border-2 border-slate-200 shadow-inner"></div>
+            <p class="text-center text-sm text-gray-500 mt-2">Pan and zoom to explore road connections.</p>
+        </section>
+
+        <!-- Historical Timeline -->
+        <section>
+            <h3 class="text-2xl font-bold text-blue-900 mb-8 text-center">Timeline: Roots & Reach</h3>
+            <div class="relative border-l-4 border-blue-200 ml-6 md:ml-12 space-y-12">
+                
+                <!-- Timeline Item 1 -->
+                <div class="relative pl-8">
+                    <div class="absolute -left-2.5 top-1 timeline-dot"></div>
+                    <h4 class="text-xl font-bold text-blue-800">772 AD: The Saxon Wars</h4>
+                    <p class="text-gray-600 mt-1">Charlemagne destroys the <strong>Irminsul</strong>. The Saxons fight for their independence. This deep history is felt at sites like the Sachsenhain in Verden.</p>
+                </div>
+
+                <!-- Timeline Item 2 -->
+                <div class="relative pl-8">
+                    <div class="absolute -left-2.5 top-1 timeline-dot"></div>
+                    <h4 class="text-xl font-bold text-blue-800">C. 1000 AD: The Gose River</h4>
+                    <p class="text-gray-600 mt-1">Goslar rises to prominence. The family name "Gosewehr" likely originates here, referring to a weir (dam) on the Gose River.</p>
+                </div>
+
+                <!-- Timeline Item 3 -->
+                <div class="relative pl-8">
+                    <div class="absolute -left-2.5 top-1 timeline-dot"></div>
+                    <h4 class="text-xl font-bold text-blue-800">Present Day: Industry (Warmsen)</h4>
+                    <p class="text-gray-600 mt-1"><strong>Gosewehr System</strong> operates in Warmsen. They specialize in automation and robotics, representing the industrious nature of the region.</p>
+                </div>
+
+                <!-- Timeline Item 4 -->
+                <div class="relative pl-8">
+                    <div class="absolute -left-2.5 top-1 timeline-dot"></div>
+                    <h4 class="text-xl font-bold text-blue-800">Present Day: Commerce (Lavelsloh)</h4>
+                    <p class="text-gray-600 mt-1">Just 6km away in Lavelsloh stands <strong>Modehaus Gosewehr</strong>. A staple of the community, this fashion house shows the family name is also tied to local commerce and style.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Itinerary Section -->
+        <section class="bg-slate-100 p-2 md:p-8 rounded-xl">
+            <h3 class="text-3xl font-bold text-blue-900 mb-8 text-center">7-Day Strategic Itinerary</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Day 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 1: Touchdown</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Hanover Base</h4>
+                    <p class="text-sm text-gray-600">Land in HAJ. Pick up rental. Hanover is the capital of Lower Saxony and your strategic hub. Visit the New Town Hall for a 3D model of the city history.</p>
+                </div>
+
+                <!-- Day 2 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 2: The Origin</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Goslar & Harz</h4>
+                    <p class="text-sm text-gray-600">Drive South. Walk the banks of the <strong>Gose River</strong>. Explore the UNESCO Old Town. This is where the name likely began.</p>
+                </div>
+
+                <!-- Day 3 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 3: Ancient Saxons</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Verden & Stones</h4>
+                    <p class="text-sm text-gray-600">Drive North-West. Visit the <strong>Sachsenhain</strong> (Saxon Grove) in Verden. See the prehistoric megalithic tombs ("Hünenbetten") scattered in this area.</p>
+                </div>
+
+                <!-- Day 4 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border-2 border-amber-400">
+                    <div class="text-amber-600 font-bold mb-2">Day 4: The Family Hub</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Warmsen & Lavelsloh</h4>
+                    <p class="text-sm text-gray-600">
+                        <strong>The Big Day.</strong> 
+                        <br>1. Drive to <strong>Warmsen</strong> to see the exterior of <em>Gosewehr System</em>.
+                        <br>2. Short drive (5 mins) to <strong>Lavelsloh</strong>. Visit <em>Modehaus Gosewehr</em>. Maybe pick up a souvenir?
+                    </p>
+                </div>
+
+                <!-- Day 5 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 5: Hanseatic Pride</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Bremen</h4>
+                    <p class="text-sm text-gray-600">Experience the wealth of the Hanseatic League. The Roland statue in the market square is a massive symbol of trading rights and freedom.</p>
+                </div>
+
+                <!-- Day 6 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 6: Westphalian Peace</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Münster</h4>
+                    <p class="text-sm text-gray-600">A city of bicycles and history. Visit St. Lamberti church (with the cages of the Anabaptists) and the Peace Hall.</p>
+                </div>
+
+                 <!-- Day 7 -->
+                 <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="text-amber-600 font-bold mb-2">Day 7: Wrap Up</div>
+                    <h4 class="text-xl font-bold text-blue-900 mb-2">Steinhuder Meer</h4>
+                    <p class="text-sm text-gray-600">On the way back to Hanover, stop at Lake Steinhude. It's a classic local getaway. Relax, eat smoked eel, and reflect before your flight.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Activity Split -->
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-bold text-blue-900 mb-4 text-center">Trip Focus Area</h3>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+                <p class="text-sm text-gray-500 mt-4 text-center">
+                    Balanced to include specific Family History without ignoring the wider Saxon culture.
+                </p>
+            </div>
+
+            <!-- Budget -->
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-bold text-blue-900 mb-4 text-center">Estimated Budget (€)</h3>
+                <div class="chart-container">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+                <p class="text-sm text-gray-500 mt-4 text-center">
+                    Estimates for 1 person, 7 days. Excludes airfare.
+                </p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 py-8 border-t border-gray-200">
+            <p>Research & Planning Infographic | Generated for Gosewehr Heritage Trip</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- 1. Weather Chart (Chart.js) ---
+        const ctxWeather = document.getElementById('weatherChart').getContext('2d');
+        
+        // Helper to process labels
+        const processLabels = (labels) => {
+            return labels.map(label => {
+                if (label.length > 16) {
+                    return label.split(' ');
+                }
+                return label;
+            });
+        };
+
+        new Chart(ctxWeather, {
+            type: 'bar',
+            data: {
+                labels: ['April', 'May', 'June', 'July', 'August', 'September'],
+                datasets: [
+                    {
+                        label: 'Avg Temp (°C)',
+                        data: [13, 18, 21, 23, 23, 19],
+                        type: 'line',
+                        borderColor: '#d97706',
+                        backgroundColor: '#d97706',
+                        yAxisID: 'y',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Rainfall (mm)',
+                        data: [40, 50, 65, 70, 60, 50],
+                        backgroundColor: '#1e3a8a',
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: { type: 'linear', display: true, position: 'left', title: {display:true, text: 'Temp (°C)'} },
+                    y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: {display:true, text: 'Rain (mm)'} }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- 2. LEAFLET MAP IMPLEMENTATION ---
+        // Justification: User requested an "Actual Map". Leaflet provides tiles without needing API keys for standard OSM.
+        
+        // Initialize Map centered on Nienburg/Warmsen area roughly
+        var map = L.map('map').setView([52.5, 9.5], 8);
+
+        // Add OpenStreetMap Tile Layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Define Locations
+        const locations = [
+            { name: "Hanover (Base)", coords: [52.3759, 9.7320], type: "Base" },
+            { name: "Goslar (Origins)", coords: [51.9077, 10.4333], type: "History" },
+            { name: "Warmsen (Gosewehr System)", coords: [52.4556, 8.8500], type: "Family" },
+            { name: "Lavelsloh (Modehaus)", coords: [52.4200, 8.7900], type: "Family" }, // Approx coords for Lavelsloh
+            { name: "Bremen (Hansa)", coords: [53.0793, 8.8017], type: "History" },
+            { name: "Münster (Peace)", coords: [51.9607, 7.6261], type: "History" }
+        ];
+
+        // Add Markers
+        locations.forEach(loc => {
+            let color = '#1e3a8a'; // Default Blue
+            if (loc.type === 'Family') color = '#d97706'; // Amber for family sites
+            
+            // Create a simple custom icon using HTML/CSS (No SVG files needed)
+            // Using standard Leaflet marker but with popup
+            L.marker(loc.coords).addTo(map)
+                .bindPopup(`<b>${loc.name}</b><br>Type: ${loc.type}`);
+        });
+        
+        // Draw a simple polyline to show the "Loop" idea visually
+        var latlngs = [
+            [52.3759, 9.7320], // Hanover
+            [51.9077, 10.4333], // Goslar
+            [51.9607, 7.6261], // Munster
+            [52.4200, 8.7900], // Lavelsloh
+            [52.4556, 8.8500], // Warmsen
+            [53.0793, 8.8017], // Bremen
+            [52.3759, 9.7320]  // Hanover
+        ];
+        var polyline = L.polyline(latlngs, {color: '#1e3a8a', weight: 3, dashArray: '10, 10'}).addTo(map);
+
+
+        // --- 3. Activity Balance (Chart.js Doughnut) ---
+        const ctxActivity = document.getElementById('activityChart').getContext('2d');
+        new Chart(ctxActivity, {
+            type: 'doughnut',
+            data: {
+                labels: processLabels(['Historical Research', 'Family Business Sites', 'Nature & Scenery', 'City Culture']),
+                datasets: [{
+                    data: [30, 30, 20, 20],
+                    backgroundColor: ['#1e3a8a', '#d97706', '#64748b', '#93c5fd'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- 4. Budget Chart (Chart.js Bar) ---
+        const ctxBudget = document.getElementById('budgetChart').getContext('2d');
+        new Chart(ctxBudget, {
+            type: 'bar',
+            data: {
+                labels: processLabels(['Hotels & Inns', 'Car & Fuel', 'Food & Dining', 'Museums/Tours', 'Shopping (Modehaus)']),
+                datasets: [{
+                    label: 'Cost (€)',
+                    data: [850, 450, 500, 200, 300],
+                    backgroundColor: ['#1e3a8a', '#1e3a8a', '#1e3a8a', '#1e3a8a', '#d97706'], // Highlight shopping in Amber
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
